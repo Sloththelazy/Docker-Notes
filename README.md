@@ -1578,4 +1578,152 @@ docker-compose up
 - **tmpfs Mounts**: Temporary storage in memory for ephemeral data.
 
 Using volume mounting is crucial for managing stateful applications in Docker, ensuring data persistence and efficient data sharing between containers.
+## Multi-Stage Build
+**Multi-stage builds** in Docker allow you to create smaller, more efficient images by separating the build environment from the runtime environment. This technique reduces the final image size and minimizes the number of dependencies included in the image, leading to faster deployments and better security.
 
+### Key Benefits of Multi-Stage Builds
+
+1. **Smaller Image Sizes**: By copying only the necessary files from the build stage to the final image, you can significantly reduce the size of your Docker images.
+2. **Improved Security**: Smaller images mean fewer potential vulnerabilities, as unnecessary packages and files are not included in the final image.
+3. **Cleaner Build Process**: You can have multiple build steps without cluttering the final image with build tools and dependencies.
+
+### How Multi-Stage Builds Work
+
+In a multi-stage build, you define multiple `FROM` statements in a single `Dockerfile`. Each `FROM` creates a new stage, and you can specify which files to copy from one stage to another.
+
+### Example: Building a Node.js Application
+
+Let's walk through an example of a multi-stage build for a Node.js application.
+
+#### Directory Structure
+
+```
+my-node-app/
+|-- Dockerfile
+|-- package.json
+|-- app.js
+```
+
+**app.js** (Simple Node.js application):
+```javascript
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Hello from Node.js app!');
+});
+
+app.listen(port, () => {
+  console.log(`App running on port ${port}`);
+});
+```
+
+**package.json**:
+```json
+{
+  "name": "my-node-app",
+  "version": "1.0.0",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "scripts": {
+    "start": "node app.js"
+  }
+}
+```
+
+#### Dockerfile with Multi-Stage Build
+
+Here’s how you can create a `Dockerfile` that utilizes multi-stage builds:
+
+```Dockerfile
+# Stage 1: Build the application
+FROM node:14 AS builder
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY package.json ./
+RUN npm install
+
+# Copy the rest of the application source code
+COPY . .
+
+# Build the application (if needed)
+# RUN npm run build
+
+# Stage 2: Create the final image
+FROM node:14
+
+# Set the working directory in the final image
+WORKDIR /app
+
+# Copy only the necessary files from the builder stage
+COPY --from=builder /app .
+
+# Expose the application port
+EXPOSE 3000
+
+# Command to run the application
+CMD ["npm", "start"]
+```
+
+### Explanation of the Dockerfile
+
+1. **Stage 1: Builder Stage**:
+   - The first `FROM node:14 AS builder` sets up the builder environment.
+   - The working directory is set to `/app`, and the `package.json` file is copied.
+   - The `RUN npm install` command installs the dependencies.
+   - The rest of the application code is copied into the container.
+
+2. **Stage 2: Final Image**:
+   - The second `FROM node:14` sets up the final runtime environment.
+   - The working directory is set to `/app` again.
+   - The line `COPY --from=builder /app .` copies only the built application files from the builder stage into the final image.
+   - The `EXPOSE` instruction specifies the port on which the application will run.
+   - Finally, the command to run the application is defined with `CMD`.
+
+### Building the Docker Image
+
+To build the Docker image with the multi-stage build, run:
+
+```bash
+docker build -t my-node-app .
+```
+
+### Running the Application
+
+Once the image is built, you can run the application with:
+
+```bash
+docker run -d -p 3000:3000 my-node-app
+```
+
+### Verifying the Application
+
+You can check if the application is running by visiting:
+
+```
+http://localhost:3000
+```
+
+You should see the message:
+```
+Hello from Node.js app!
+```
+
+### Best Practices for Multi-Stage Builds
+
+1. **Minimize the Number of Layers**: Combine commands when possible to reduce the number of layers and make the image smaller.
+2. **Only Copy Necessary Files**: In the final stage, only copy the files needed to run the application, excluding development dependencies and files.
+3. **Use Specific Base Images**: Specify the version of base images (like `node:14`) to avoid unexpected changes when the base image is updated.
+4. **Use Build Arguments**: If you need to pass dynamic values during the build process, use `ARG` and `ENV` for build arguments.
+
+### Summary
+
+- **Multi-stage builds** allow you to create smaller and more secure Docker images by separating the build environment from the runtime environment.
+- You define multiple stages in a single `Dockerfile` using multiple `FROM` statements, allowing you to copy only necessary files to the final image.
+- This approach is particularly useful for applications built with frameworks like Node.js, Go, or Java, where the build process often generates additional files that are not needed in production.
