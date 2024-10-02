@@ -646,7 +646,7 @@ This means that if you define an environment variable in multiple places, Docker
 Environment variables make Docker containers highly configurable and flexible, allowing for easy adjustments of settings between different environments (development, testing, production, etc.).
 Containerizing an application in Docker involves creating a Docker image of the application, which includes all the necessary components like the code, dependencies, and configurations. Below are the steps to containerize a basic Node.js application, but the process is similar for most programming languages or frameworks.
 
-### Steps to Containerize an Application
+## Steps to Containerize an Application
 
 Let’s walk through an example of how to containerize a simple **Node.js** application.
 
