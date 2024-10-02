@@ -981,3 +981,240 @@ This command shows all the layers of the image, including their size and creatio
 - **Check build context**: Ensure the build context is as small as possible to avoid cache invalidation.
 
 Effective caching can significantly reduce build times, especially in CI/CD pipelines, and make development workflows smoother.
+
+## Docker Compose
+**Docker Compose** is a tool for defining and running multi-container Docker applications. It allows you to define all your application’s services (containers), networks, and volumes in a single YAML file (`docker-compose.yml`), making it easier to manage multi-container environments.
+
+### Key Benefits of Docker Compose:
+- **Manage multiple containers**: Define multiple containers in one file and manage them as a group.
+- **Networking**: Docker Compose automatically sets up communication between services defined in the same file.
+- **Reusable configuration**: You can reuse configurations, volumes, and networks across different environments (development, testing, production).
+- **Simplified commands**: One command can start, stop, and manage multiple containers.
+
+### Typical Use Cases:
+- Applications that require multiple services, such as a web server (e.g., Node.js) and a database (e.g., MySQL, MongoDB).
+- Orchestrating different components of your stack (e.g., backend API, frontend UI, databases, message queues).
+
+---
+
+### Basic Example of Docker Compose
+
+Let’s create a simple application with **Node.js** and **MongoDB** services.
+
+#### 1. **Set Up the Application**
+Create a project directory with the following structure:
+
+```
+my-app/
+|-- app.js
+|-- package.json
+|-- Dockerfile
+|-- docker-compose.yml
+```
+
+**app.js** (Node.js example):
+```javascript
+// app.js
+const express = require('express');
+const mongoose = require('mongoose');
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Connect to MongoDB
+mongoose.connect('mongodb://db:27017/mydatabase', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.log('Failed to connect to MongoDB:', err));
+
+app.get('/', (req, res) => {
+  res.send('Hello from Node.js app!');
+});
+
+app.listen(port, () => {
+  console.log(`App running on port ${port}`);
+});
+```
+
+**package.json**:
+```json
+{
+  "name": "my-node-app",
+  "version": "1.0.0",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.10.0"
+  },
+  "scripts": {
+    "start": "node app.js"
+  }
+}
+```
+
+---
+
+#### 2. **Create a `Dockerfile`**
+
+Create a Dockerfile to containerize the Node.js application.
+
+**Dockerfile**:
+```Dockerfile
+# Base image
+FROM node:14
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the app source code
+COPY . .
+
+# Expose the application port
+EXPOSE 3000
+
+# Start the application
+CMD ["npm", "start"]
+```
+
+---
+
+#### 3. **Create a `docker-compose.yml` File**
+
+This file will define the **Node.js app** and the **MongoDB database** as separate services.
+
+**docker-compose.yml**:
+```yaml
+version: "3"
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
+```
+
+In this file:
+- **app** service:
+  - **build: .**: Tells Docker Compose to build the Node.js app from the current directory using the `Dockerfile`.
+  - **ports: "3000:3000"**: Exposes port 3000 on both the host and the container.
+  - **depends_on**: Ensures that the `db` service (MongoDB) starts before the `app` service.
+  - **networks**: The app and database services are connected via a custom network (`app-network`).
+
+- **db** service (MongoDB):
+  - **image: mongo**: Pulls the official MongoDB image from Docker Hub.
+  - **ports: "27017:27017"**: Exposes MongoDB’s default port.
+  - **volumes**: A named volume (`mongo-data`) is used to persist MongoDB data.
+  - **networks**: Shares the same network as the Node.js app.
+
+- **volumes**: Declares the `mongo-data` volume to store MongoDB data persistently.
+
+- **networks**: A custom network (`app-network`) is defined to allow communication between the `app` and `db` services.
+
+---
+
+#### 4. **Running the Application with Docker Compose**
+
+To start the application, use the `docker-compose up` command.
+
+```bash
+docker-compose up
+```
+
+This command:
+- Builds the **Node.js app** image.
+- Starts both the **Node.js** and **MongoDB** containers.
+- Connects the two services via the defined network (`app-network`).
+
+---
+
+#### 5. **Verify the Setup**
+
+Once the application is running, you can open your browser and navigate to:
+
+```
+http://localhost:3000
+```
+
+You should see the message:
+```
+Hello from Node.js app!
+```
+
+The application is connected to MongoDB at `mongodb://db:27017/mydatabase`, where `db` is the hostname of the MongoDB service defined in `docker-compose.yml`.
+
+---
+
+#### 6. **Useful Docker Compose Commands**
+
+- **Start containers**:
+  ```bash
+  docker-compose up
+  ```
+  Use `-d` to run in detached mode (in the background):
+  ```bash
+  docker-compose up -d
+  ```
+
+- **Stop containers**:
+  ```bash
+  docker-compose down
+  ```
+
+- **Rebuild images** (if the Dockerfile or dependencies change):
+  ```bash
+  docker-compose build
+  ```
+
+- **View logs from containers**:
+  ```bash
+  docker-compose logs
+  ```
+
+- **Scale services** (e.g., run multiple instances of a service):
+  ```bash
+  docker-compose up --scale app=3
+  ```
+  This will run three instances of the `app` service.
+
+---
+
+### Why Use Docker Compose?
+
+- **Simplified Configuration**: Define your entire application stack (e.g., app, database, cache, message queue) in one file.
+- **Versioning**: Different environments (like development, testing, production) can have different `docker-compose.yml` files.
+- **Networking**: Automatically handles communication between services without manual networking setup.
+- **Easy Scaling**: Docker Compose allows you to scale services with a single command.
+- **Volume Management**: Easily manage persistent data storage between container restarts.
+
+---
+
+### Summary:
+
+- **Docker Compose** is a powerful tool for managing multi-container Docker applications.
+- It allows you to define services, networks, and volumes in a `docker-compose.yml` file.
+- You can easily manage the lifecycle of multiple containers with simple commands (`docker-compose up`, `docker-compose down`).
+- Compose is great for local development, testing environments, or small-scale production deployments.
+
+Using Docker Compose helps manage complex setups and ensures consistent environments across development and production.
