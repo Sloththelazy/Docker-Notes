@@ -486,3 +486,161 @@ docker run -p 8080:80 --expose 80 nginx
 - **Port mapping**: Binds a container’s port to a port on the host, making it accessible from the host machine or external networks.
 
 Exposing ports is useful for communication between containers, while port mapping is required when you want to access the container’s service from the outside world (e.g., your browser or another external system).
+
+## What Are Environment Variables in Docker?
+
+**Environment variables** are key-value pairs that are used to pass configuration values into your application or system. In Docker, environment variables allow you to configure a container's behavior at runtime without hardcoding those values inside the container image.
+
+They are commonly used to:
+- Set application settings (like database credentials, API keys, or environment types like `production`, `development`, etc.).
+- Make containerized applications more portable and configurable.
+- Ensure sensitive information like passwords isn't stored in Docker images.
+
+### How to Pass Environment Variables in Docker
+
+Docker allows you to pass environment variables to containers in several ways:
+
+---
+
+#### 1. **Using `-e` or `--env` in `docker run`**
+You can pass environment variables when starting a container using the `-e` or `--env` option in the `docker run` command.
+
+**Syntax**:
+```bash
+docker run -e VARIABLE_NAME=value <image>
+```
+
+**Example**:
+```bash
+docker run -e NODE_ENV=production -e DB_HOST=localhost my-node-app
+```
+- This passes two environment variables (`NODE_ENV` and `DB_HOST`) to the container running the `my-node-app` image.
+- Inside the container, the environment variable `NODE_ENV` will be set to `production`, and `DB_HOST` will be set to `localhost`.
+
+---
+
+#### 2. **Using an `.env` File**
+You can store environment variables in a separate file (typically named `.env`) and pass them to Docker using the `--env-file` option. This method is cleaner when dealing with many variables, especially for sensitive values like passwords.
+
+**Syntax**:
+```bash
+docker run --env-file <file_name> <image>
+```
+
+**Example `.env` file**:
+```
+NODE_ENV=production
+DB_HOST=localhost
+DB_USER=admin
+DB_PASSWORD=secretpassword
+```
+
+**Example Command**:
+```bash
+docker run --env-file ./my-env-file.env my-node-app
+```
+- This command loads all the environment variables from the `my-env-file.env` file and passes them to the container.
+
+---
+
+#### 3. **Setting Environment Variables in `Dockerfile`**
+You can set default environment variables in a `Dockerfile` using the `ENV` instruction. These environment variables are built into the image, so any container started from the image will inherit them by default.
+
+**Syntax in a `Dockerfile`**:
+```Dockerfile
+ENV VARIABLE_NAME=value
+```
+
+**Example `Dockerfile`**:
+```Dockerfile
+FROM node:14
+
+# Set default environment variable
+ENV NODE_ENV=production
+ENV DB_HOST=localhost
+
+# Copy application files and install dependencies
+COPY . /app
+WORKDIR /app
+RUN npm install
+
+CMD ["npm", "start"]
+```
+- In this example, `NODE_ENV` is set to `production` and `DB_HOST` is set to `localhost` by default.
+
+**Note**: Environment variables set using `docker run` or an `.env` file will **override** those set in the `Dockerfile`.
+
+---
+
+#### 4. **Using `docker-compose.yml` to Pass Environment Variables**
+If you're using **Docker Compose**, you can pass environment variables through the `docker-compose.yml` file either directly or via an `.env` file.
+
+##### Directly in `docker-compose.yml`
+```yaml
+version: "3"
+services:
+  app:
+    image: my-node-app
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=localhost
+```
+- This defines the environment variables `NODE_ENV` and `DB_HOST` for the `app` service.
+
+##### Using an `.env` File with Docker Compose
+You can use an `.env` file with Docker Compose to pass environment variables.
+
+**Example `.env` file**:
+```
+NODE_ENV=production
+DB_HOST=localhost
+```
+
+**docker-compose.yml**:
+```yaml
+version: "3"
+services:
+  app:
+    image: my-node-app
+    env_file:
+      - ./my-env-file.env
+```
+- The `env_file` directive tells Docker Compose to load the environment variables from the specified `.env` file.
+
+---
+
+### Inspecting Environment Variables in a Running Container
+
+Once a container is running, you can view the environment variables using the `docker exec` command.
+
+**Example**:
+```bash
+docker exec <container_id> env
+```
+- This lists all environment variables set inside the running container.
+
+You can also inspect a container’s configuration, including environment variables, using:
+```bash
+docker inspect <container_id>
+```
+Look for the `Env` section in the output, which will display all the environment variables passed to the container.
+
+---
+
+### Order of Precedence
+
+When Docker sets environment variables, it follows this precedence (from highest to lowest):
+1. **Values passed via `docker run -e` or `--env-file`.**
+2. **Values defined in the `docker-compose.yml` file.**
+3. **Values set via the `ENV` directive in the `Dockerfile`.**
+
+This means that if you define an environment variable in multiple places, Docker will use the value from the highest precedence location.
+
+---
+
+### Summary:
+- Environment variables are used to configure applications running in Docker containers.
+- You can pass environment variables using `-e`, an `.env` file, in a `Dockerfile`, or via `docker-compose.yml`.
+- Docker supports overriding default environment variables, and inspecting them is easy using `docker exec` or `docker inspect`.
+
+Environment variables make Docker containers highly configurable and flexible, allowing for easy adjustments of settings between different environments (development, testing, production, etc.).
