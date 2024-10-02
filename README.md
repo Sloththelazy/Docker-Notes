@@ -114,3 +114,223 @@ In Docker, **images** and **containers** are two fundamental concepts, and they 
 | **Execution**       | Cannot run on its own                      | Runs as an isolated process             |
 
 In short, Docker **images** are used to create **containers**, and containers are the actual execution environments where your application runs.
+
+## Docker Commands
+
+Here is a list of essential Docker commands that a beginner should know, along with a short description and example use cases:
+
+### 1. **`docker --version`**
+   - **Description**: Shows the Docker version installed on your system.
+   - **Example**:
+     ```bash
+     docker --version
+     ```
+
+### 2. **`docker pull`**
+   - **Description**: Downloads a Docker image from a registry (like Docker Hub).
+   - **Example**:
+     ```bash
+     docker pull nginx
+     ```
+
+### 3. **`docker images`**
+   - **Description**: Lists all Docker images on your system.
+   - **Example**:
+     ```bash
+     docker images
+     ```
+
+### 4. **`docker run`**
+   - **Description**: Runs a container from a Docker image.
+   - **Example**:
+     ```bash
+     docker run nginx
+     ```
+     - Run a container interactively:
+     ```bash
+     docker run -it ubuntu bash
+     ```
+
+### 5. **`docker ps`**
+   - **Description**: Lists running containers.
+   - **Example**:
+     ```bash
+     docker ps
+     ```
+   - List all containers (including stopped ones):
+     ```bash
+     docker ps -a
+     ```
+
+### 6. **`docker start`**
+   - **Description**: Starts a stopped container.
+   - **Example**:
+     ```bash
+     docker start <container_id>
+     ```
+
+### 7. **`docker stop`**
+   - **Description**: Stops a running container.
+   - **Example**:
+     ```bash
+     docker stop <container_id>
+     ```
+
+### 8. **`docker rm`**
+   - **Description**: Removes a container.
+   - **Example**:
+     ```bash
+     docker rm <container_id>
+     ```
+
+### 9. **`docker rmi`**
+   - **Description**: Removes a Docker image.
+   - **Example**:
+     ```bash
+     docker rmi <image_id>
+     ```
+
+### 10. **`docker exec`**
+   - **Description**: Runs a command inside a running container.
+   - **Example**:
+     ```bash
+     docker exec -it <container_id> bash
+     ```
+     - This starts a bash shell inside the running container.
+
+### 11. **`docker build`**
+   - **Description**: Builds a Docker image from a `Dockerfile`.
+   - **Example**:
+     ```bash
+     docker build -t my-app .
+     ```
+
+### 12. **`docker logs`**
+   - **Description**: Shows the logs of a running container.
+   - **Example**:
+     ```bash
+     docker logs <container_id>
+     ```
+
+### 13. **`docker stop $(docker ps -q)`**
+   - **Description**: Stops all running containers.
+   - **Example**:
+     ```bash
+     docker stop $(docker ps -q)
+     ```
+
+### 14. **`docker network ls`**
+   - **Description**: Lists Docker networks.
+   - **Example**:
+     ```bash
+     docker network ls
+     ```
+
+### 15. **`docker network create`**
+   - **Description**: Creates a Docker network.
+   - **Example**:
+     ```bash
+     docker network create my-network
+     ```
+
+### 16. **`docker volume ls`**
+   - **Description**: Lists Docker volumes.
+   - **Example**:
+     ```bash
+     docker volume ls
+     ```
+
+### 17. **`docker inspect`**
+   - **Description**: Shows detailed information about a container or image.
+   - **Example**:
+     ```bash
+     docker inspect <container_id>
+     ```
+
+### 18. **`docker-compose up`**
+   - **Description**: Starts and runs containers defined in a `docker-compose.yml` file.
+   - **Example**:
+     ```bash
+     docker-compose up
+     ```
+
+### 19. **`docker-compose down`**
+   - **Description**: Stops and removes containers, networks, and volumes created by `docker-compose up`.
+   - **Example**:
+     ```bash
+     docker-compose down
+     ```
+
+### 20. **`docker tag`**
+   - **Description**: Tags an image with a new name or version.
+   - **Example**:
+     ```bash
+     docker tag <image_id> my-app:1.0
+     ```
+
+### 21. **`docker push`**
+   - **Description**: Pushes an image to a Docker registry (like Docker Hub).
+   - **Example**:
+     ```bash
+     docker push my-app:1.0
+     ```
+
+### 22. **`docker login`**
+   - **Description**: Logs in to a Docker registry (like Docker Hub).
+   - **Example**:
+     ```bash
+     docker login
+     ```
+
+### 23. **`docker commit`**
+   - **Description**: Creates a new image from a container’s changes.
+   - **Example**:
+     ```bash
+     docker commit <container_id> my-new-image
+     ```
+
+### 24. **`docker export`**
+   - **Description**: Exports a container’s file system as a tar archive.
+   - **Example**:
+     ```bash
+     docker export <container_id> > container-backup.tar
+     ```
+
+### 25. **`docker import`**
+   - **Description**: Creates an image from a tarball archive.
+   - **Example**:
+     ```bash
+     docker import container-backup.tar my-new-image
+     ```
+
+### Summary Table
+
+| Command                | Description                                       | Example                                               |
+|------------------------|---------------------------------------------------|-------------------------------------------------------|
+| `docker --version`      | Check Docker version                              | `docker --version`                                    |
+| `docker pull`           | Download an image                                 | `docker pull nginx`                                   |
+| `docker images`         | List images                                       | `docker images`                                       |
+| `docker run`            | Run a container                                   | `docker run nginx`                                    |
+| `docker ps`             | List running containers                           | `docker ps`                                           |
+| `docker start`          | Start a stopped container                         | `docker start <container_id>`                         |
+| `docker stop`           | Stop a running container                          | `docker stop <container_id>`                          |
+| `docker rm`             | Remove a container                                | `docker rm <container_id>`                            |
+| `docker rmi`            | Remove an image                                   | `docker rmi <image_id>`                               |
+| `docker exec`           | Run a command in a running container              | `docker exec -it <container_id> bash`                 |
+| `docker build`          | Build an image from a Dockerfile                  | `docker build -t my-app .`                            |
+| `docker logs`           | View container logs                               | `docker logs <container_id>`                          |
+| `docker stop $(docker ps -q)` | Stop all running containers                 | `docker stop $(docker ps -q)`                         |
+| `docker network ls`     | List Docker networks                              | `docker network ls`                                   |
+| `docker network create` | Create a Docker network                           | `docker network create my-network`                    |
+| `docker volume ls`      | List Docker volumes                               | `docker volume ls`                                    |
+| `docker inspect`        | Inspect a container or image                      | `docker inspect <container_id>`                       |
+| `docker-compose up`     | Run containers from a Compose file                | `docker-compose up`                                   |
+| `docker-compose down`   | Stop and remove containers from Compose file      | `docker-compose down`                                 |
+| `docker tag`            | Tag an image                                      | `docker tag <image_id> my-app:1.0`                    |
+| `docker push`           | Push an image to a registry                       | `docker push my-app:1.0`                              |
+| `docker login`          | Login to Docker registry                          | `docker login`                                        |
+| `docker commit`         | Create a new image from container changes         | `docker commit <container_id> my-new-image`           |
+| `docker export`         | Export container filesystem as a tar archive      | `docker export <container_id> > container-backup.tar` |
+| `docker import`         | Import a tar archive to create a new image        | `docker import container-backup.tar my-new-image`     |
+
+These commands are the foundation of working with Docker and will help you get started with building, running, managing, and deploying containers.
