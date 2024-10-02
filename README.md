@@ -334,3 +334,75 @@ Here is a list of essential Docker commands that a beginner should know, along w
 | `docker import`         | Import a tar archive to create a new image        | `docker import container-backup.tar my-new-image`     |
 
 These commands are the foundation of working with Docker and will help you get started with building, running, managing, and deploying containers.
+
+## Docker Port Mapping
+
+Docker port mapping is the process of linking ports on a Docker container to ports on the host machine, allowing external access to services running inside the container. When running an application inside a Docker container, it operates in an isolated environment, and to interact with it from outside the container, you need to map the container’s internal ports to the host system's ports.
+
+### Syntax:
+To map a port, you use the `-p` or `--publish` option when running the `docker run` command. The general syntax is:
+```bash
+docker run -p <host_port>:<container_port> <image_name>
+```
+
+- **`host_port`**: The port on the host (your local machine or server).
+- **`container_port`**: The port inside the container where the service is running.
+
+### Examples:
+
+#### 1. **Simple Port Mapping**
+   Let’s say you want to run an **nginx** web server inside a Docker container, which listens on port 80 inside the container. To make it accessible on port 8080 on your host, you can map the ports as follows:
+   ```bash
+   docker run -p 8080:80 nginx
+   ```
+   - This maps the host's port **8080** to the container's port **80**. You can now access the nginx server by going to `http://localhost:8080` in your web browser.
+
+#### 2. **Multiple Port Mapping**
+   You can map multiple ports between the host and container. For example, if an application in the container uses both HTTP (port 80) and HTTPS (port 443), you can map both:
+   ```bash
+   docker run -p 8080:80 -p 8443:443 nginx
+   ```
+   - This maps:
+     - Host port **8080** to container port **80** (for HTTP).
+     - Host port **8443** to container port **443** (for HTTPS).
+
+#### 3. **Random Host Port Mapping**
+   Docker can also assign a random port on the host side, which can be useful in certain scenarios where you don't care which host port is used. To allow Docker to select a random host port, you can omit the `host_port`:
+   ```bash
+   docker run -p 80 nginx
+   ```
+   - Docker will randomly choose an available port on the host and map it to port **80** of the container. You can see the assigned port using the `docker ps` command or by inspecting the container.
+
+#### 4. **Specifying the Host IP Address**
+   You can bind the port to a specific network interface (IP address) on the host. By default, Docker binds the ports to all interfaces (`0.0.0.0`). To bind to a specific IP address, use:
+   ```bash
+   docker run -p 127.0.0.1:8080:80 nginx
+   ```
+   - This maps the container’s port **80** to host port **8080**, but only binds it to the **127.0.0.1** loopback interface. It will only be accessible locally and not from external machines.
+
+### Checking Port Mappings:
+
+To see the port mappings of a running container, you can use:
+
+1. **`docker ps`**: Lists the port mappings for all running containers.
+   ```bash
+   docker ps
+   ```
+   The output will include columns like `PORTS`, showing which ports are mapped from the container to the host, e.g., `0.0.0.0:8080->80/tcp`.
+
+2. **`docker port`**: Shows the port mappings for a specific container.
+   ```bash
+   docker port <container_id>
+   ```
+   Example output:
+   ```
+   80/tcp -> 0.0.0.0:8080
+   ```
+
+### Summary:
+- **Port mapping** allows you to expose services running inside a container to the outside world.
+- Use the `-p` flag with the format `-p <host_port>:<container_port>`.
+- You can bind to specific IP addresses or let Docker assign a random port on the host.
+- Use `docker ps` or `docker port` to check the current mappings.
+
+Port mapping is crucial for making Docker containers accessible and integrating them with the external environment.
