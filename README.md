@@ -406,3 +406,83 @@ To see the port mappings of a running container, you can use:
 - Use `docker ps` or `docker port` to check the current mappings.
 
 Port mapping is crucial for making Docker containers accessible and integrating them with the external environment.
+
+## Port Exposing
+
+Docker **port exposing** refers to making a port available for communication inside a container or between containers. This is different from **port mapping**, which makes the container’s port accessible from the host or external networks.
+
+### Key Differences:
+- **Port exposing**:
+  - Opens a port inside the container and allows other containers (in the same Docker network) to communicate with it.
+  - Does **not** automatically allow external (host) access to the container unless a specific **port mapping** is also defined.
+  
+- **Port mapping**:
+  - Binds a container’s port to a port on the host machine, allowing external access to the container from outside Docker.
+
+### How to Expose Ports in Docker
+
+1. **Expose Ports in the `Dockerfile`**:
+   You can define which ports your container will use by specifying them in a `Dockerfile` using the `EXPOSE` instruction. This is a **declarative** way to let others know which port(s) your application listens on.
+
+   Example `Dockerfile`:
+   ```Dockerfile
+   FROM nginx
+   EXPOSE 80
+   EXPOSE 443
+   ```
+   - This exposes ports **80** (HTTP) and **443** (HTTPS) inside the container, meaning the container can receive traffic on these ports from other containers, but not from the host unless you explicitly map the ports during the container run.
+
+2. **Expose Ports Using `docker run --expose`**:
+   You can also expose ports when you start a container using the `--expose` option. This is done in cases where you don’t want to modify the `Dockerfile`, but you still want to make the port accessible inside the container.
+
+   Example:
+   ```bash
+   docker run --expose 8080 nginx
+   ```
+   - This command exposes port **8080** inside the container, making it available for communication with other containers on the same network.
+
+### Communication Between Containers Using Exposed Ports
+
+When two or more containers are running in the same Docker network, they can communicate with each other through the exposed ports.
+
+#### Example:
+1. **Create a Docker Network**:
+   Create a custom bridge network to allow the containers to communicate.
+   ```bash
+   docker network create my-network
+   ```
+
+2. **Run a Container and Expose a Port**:
+   Run an Nginx container and expose port 80.
+   ```bash
+   docker run --expose 80 --network my-network --name my-nginx nginx
+   ```
+
+3. **Run Another Container in the Same Network**:
+   Run another container in the same network, such as a busybox container, to test communication.
+   ```bash
+   docker run --rm -it --network my-network busybox
+   ```
+
+4. **Communicate Between Containers**:
+   Inside the `busybox` container, you can use `wget` or `curl` to access the exposed port of the `my-nginx` container.
+   ```bash
+   wget -qO- http://my-nginx:80
+   ```
+   - Since both containers are in the same network, they can communicate using the exposed port **80** of the `my-nginx` container.
+
+### Exposing Ports and Port Mapping Together
+
+To expose a port **and** make it accessible from the host (outside Docker), you can combine both port exposing and port mapping. For instance:
+
+```bash
+docker run -p 8080:80 --expose 80 nginx
+```
+- **Expose** port **80** inside the container.
+- **Map** port **80** inside the container to port **8080** on the host. This allows external access via `http://localhost:8080`.
+
+### Summary of Exposing vs Mapping Ports:
+- **Exposing ports**: Opens ports inside the container for internal communication between containers in the same network. It does not make the service accessible from the host machine.
+- **Port mapping**: Binds a container’s port to a port on the host, making it accessible from the host machine or external networks.
+
+Exposing ports is useful for communication between containers, while port mapping is required when you want to access the container’s service from the outside world (e.g., your browser or another external system).
