@@ -34,7 +34,7 @@ Docker is widely used for its ability to streamline the development, deployment,
 ### Conclusion:
 Docker simplifies the complexities of managing applications, particularly in environments where consistency, efficiency, and scalability are key. It has become an essential tool for developers and operations teams alike.
 
-# Images vs Containers
+## Images vs Containers
 In Docker, **images** and **containers** are two fundamental concepts, and they serve different purposes. Here’s a comparison to clarify their roles:
 
 ### **1. Definition**
