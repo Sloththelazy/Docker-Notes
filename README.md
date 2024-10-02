@@ -1218,3 +1218,206 @@ The application is connected to MongoDB at `mongodb://db:27017/mydatabase`, wher
 - Compose is great for local development, testing environments, or small-scale production deployments.
 
 Using Docker Compose helps manage complex setups and ensures consistent environments across development and production.
+
+## Docker Networking
+Docker networking is a key feature that enables containers to communicate with each other, either on the same host or across different hosts. Docker automatically sets up networking for containers, but you can customize and control the networks based on your needs.
+
+### Types of Docker Networks
+
+Docker provides several types of networks to connect containers:
+
+1. **Bridge Network (Default)**:
+   - The most common network type.
+   - Each container on the same bridge network can communicate with each other by their container names or IP addresses.
+   - By default, when you run a container with `docker run`, it’s attached to the `bridge` network unless specified otherwise.
+   - Containers in different bridge networks can’t communicate with each other without extra configuration.
+
+   **Use case**: Useful for containers running on a single host that need to communicate with each other, such as a web app and a database.
+
+   **Example**:
+   ```bash
+   docker network create my-bridge-network
+   docker run -d --name app1 --network my-bridge-network nginx
+   docker run -d --name app2 --network my-bridge-network nginx
+   ```
+   In this example, `app1` and `app2` can communicate with each other through the `my-bridge-network` bridge network.
+
+2. **Host Network**:
+   - The container shares the host’s networking stack, meaning there’s no network isolation between the container and the host.
+   - The container’s services run directly on the host machine's IP address.
+
+   **Use case**: Useful when you need the highest performance and don’t want any network translation (e.g., for performance-critical applications).
+
+   **Example**:
+   ```bash
+   docker run --network host nginx
+   ```
+   The NGINX container will run directly on the host’s network without its own IP address.
+
+3. **Overlay Network**:
+   - Used in **Docker Swarm** or **Kubernetes** to enable multi-host networking.
+   - Allows containers on different hosts to communicate with each other securely.
+   - You can create an overlay network to connect containers running on different Docker hosts.
+
+   **Use case**: Useful for creating a multi-container, multi-host setup, such as microservices spread across different servers in a cluster.
+
+   **Example** (in Docker Swarm mode):
+   ```bash
+   docker network create --driver overlay my-overlay-network
+   ```
+   Containers across multiple nodes in the Swarm can now communicate with each other via this overlay network.
+
+4. **None Network**:
+   - The container has no network access.
+   - Useful if you want to isolate the container entirely from networking.
+
+   **Use case**: Useful for highly secure environments or running services that don’t need networking.
+
+   **Example**:
+   ```bash
+   docker run --network none nginx
+   ```
+
+5. **Macvlan Network**:
+   - Allows containers to have their own MAC addresses on the physical network, essentially behaving like physical devices on the local network.
+   - The container is treated as a separate device on the network with its own IP.
+
+   **Use case**: Useful when you need full control over the network setup or want containers to behave like physical devices on the network.
+
+   **Example**:
+   ```bash
+   docker network create -d macvlan \
+   --subnet=192.168.1.0/24 \
+   --gateway=192.168.1.1 \
+   -o parent=eth0 my-macvlan-network
+   ```
+
+---
+
+### Networking in Docker Compose
+
+In **Docker Compose**, you can define custom networks, and services will automatically be connected to these networks.
+
+#### Example: Custom Docker Compose Network
+
+**docker-compose.yml**:
+```yaml
+version: "3"
+services:
+  app:
+    image: nginx
+    networks:
+      - frontend
+      - backend
+
+  db:
+    image: mongo
+    networks:
+      - backend
+
+networks:
+  frontend:
+  backend:
+```
+
+- **app** is connected to both the `frontend` and `backend` networks.
+- **db** is connected only to the `backend` network.
+- **frontend** and **backend** are custom networks created by Docker Compose.
+
+**Running the Compose file**:
+```bash
+docker-compose up
+```
+
+In this setup, the `app` service can communicate with both the `frontend` and `backend` networks, while the `db` service can only communicate with the `backend` network.
+
+---
+
+### Inspecting Docker Networks
+
+To view and inspect Docker networks, you can use the following commands:
+
+1. **List networks**:
+   ```bash
+   docker network ls
+   ```
+   This command will list all Docker networks, including `bridge`, `host`, `none`, and any custom networks you've created.
+
+2. **Inspect a network**:
+   ```bash
+   docker network inspect <network_name>
+   ```
+   This command provides detailed information about a specific network, including the connected containers and their IP addresses.
+
+3. **Connect a container to a network**:
+   ```bash
+   docker network connect <network_name> <container_name>
+   ```
+   Use this to manually connect a running container to a network.
+
+4. **Disconnect a container from a network**:
+   ```bash
+   docker network disconnect <network_name> <container_name>
+   ```
+
+---
+
+### Exposing Ports and Networking
+
+Docker containers have internal ports that need to be mapped to the host machine to be accessible. This is done using the `-p` flag with the `docker run` command or in `docker-compose.yml`.
+
+**Example**: Exposing an internal container port (`80`) to a host port (`8080`):
+```bash
+docker run -d -p 8080:80 nginx
+```
+- This command maps port 8080 on the host to port 80 inside the container, making the NGINX web server accessible on `http://localhost:8080`.
+
+---
+
+### Example: Networking in Action
+
+Let’s create a multi-container setup using Docker Compose that involves a **web application** (Node.js) and a **database** (MongoDB) communicating over a Docker network.
+
+**docker-compose.yml**:
+```yaml
+version: "3.7"
+services:
+  web:
+    image: node:14
+    command: node app.js
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    networks:
+      - webnet
+
+  db:
+    image: mongo
+    networks:
+      - webnet
+
+networks:
+  webnet:
+```
+
+- Both `web` (Node.js) and `db` (MongoDB) services are connected via the `webnet` network.
+- The Node.js app can connect to MongoDB at the hostname `db` on the `webnet` network.
+
+To run this setup, simply execute:
+```bash
+docker-compose up
+```
+
+---
+
+### Summary of Docker Networking Concepts
+
+- **Bridge Network**: Default network, isolates containers, but allows communication between containers on the same network.
+- **Host Network**: The container shares the host's network stack directly.
+- **Overlay Network**: Enables communication between containers on different Docker hosts (multi-host).
+- **Macvlan Network**: Assigns a MAC address to the container, allowing it to appear as a physical device on the network.
+- **Networking in Docker Compose**: Easily set up custom networks for multi-container applications.
+
+Docker networking allows containers to communicate in flexible and secure ways, whether they are on the same host or spread across a distributed cluster.
